@@ -22,10 +22,12 @@ function usePublisher(containerId:string, autoLayout?:boolean=true, displayName?
   const mSession = useSession();
 
   function handleDestroyed(){
+    console.log(">>>>>> Stream Destroyed: ");
     setPublisher(undefined);
   }
 
   function handleStreamCreated({ stream }){
+    console.log(">>>>>> Stream Created: ", stream);
     setStream(stream);
   }
 
@@ -45,17 +47,17 @@ function usePublisher(containerId:string, autoLayout?:boolean=true, displayName?
   }
 
   async function publish(
-    user:User, 
+    user:User,
     extraData?:any,
     onAccessDenied?:(user:User) => void
   ){
     setOnAccessDenied(onAccessDenied);
     try{
       if(!mSession.session) throw new Error("You are not connected to session");
-      const options = { 
+      const options = {
         insertMode: "append",
         name: user.name,
-        style: { 
+        style: {
           buttonDisplayMode: "off",
           nameDisplayMode: displayName? "on": "off"
         }
@@ -85,10 +87,10 @@ function usePublisher(containerId:string, autoLayout?:boolean=true, displayName?
     }
   }, [ publisher, stream ])
 
-  return { 
-    unpublish, 
-    publish, 
-    publisher, 
+  return {
+    unpublish,
+    publish,
+    publisher,
     stream,
     layoutManager
   }

@@ -28,14 +28,20 @@ function ModeratorPage(){
   const mSession = useSession();
   const mPublisher = usePublisher("cameraContainer", true, false);
   const mScreenPublisher = usePublisher("cameraContainer");
-  const mSubscriber = useSubscriber({ 
-    moderator: "cameraContainer", 
-    camera: "cameraContainer", 
-    screen: "cameraContainer" 
+  const mSubscriber = useSubscriber({
+    moderator: "cameraContainer",
+    camera: "cameraContainer",
+    screen: "cameraContainer"
   });
 
   function handleNameSubmit(user:User){
     setMe(user);
+  }
+
+  function handleMediaChange(e) {
+    if (!mPublisher.publisher) return;
+    console.log(">>>>>>>>>>>>> ", e);
+    mPublisher.publisher.setAudioSource(mPublisher.publisher.getAudioSource());
   }
 
   async function connect(){
@@ -59,8 +65,22 @@ function ModeratorPage(){
   }, [ me ]);
 
   React.useEffect(() => {
-    if(mSession.session) mPublisher.publish(me);
+    if(mSession.session) {
+      mPublisher.publish(me, undefined, (e) => {
+        console.log(">>>>>>>> Blocked: ", e);
+      });
+    }
   }, [ mSession.session ])
+
+  React.useEffect(() => {
+    if (!mPublisher.publisher) return;
+    console.log(">>>>>>> ", mPublisher.publisher);
+    mPublisher.publisher.on("mediaStopped", handleMediaChange);
+    window.pub = mPublisher.publisher;
+    return () => {
+      mPublisher.publisher && mPublisher.publisher.off("mediaStopped", handleMediaChange);
+    }
+  }, [mPublisher.publisher]);
 
   React.useEffect(() => {
     if(mSession.session) mSubscriber.subscribe(mSession.streams);
@@ -68,7 +88,7 @@ function ModeratorPage(){
 
   if(!me && !mSession.session) {
     return (
-      <AskNameDialog 
+      <AskNameDialog
         pin={config.moderatorPin}
         role="moderator"
         onSubmit={handleNameSubmit}
@@ -79,7 +99,7 @@ function ModeratorPage(){
   else if(me && mSession.session) return (
     <div className={mStyles.container}>
       <div className={mStyles.leftPanel}>
-        <div className={mStyles.chat} style={{ 
+        <div className={mStyles.chat} style={{
             borderBottom: "1px solid #e7ebee",
             flexBasis: "50%"
           }}
@@ -87,11 +107,11 @@ function ModeratorPage(){
           <h4 className="Vlt-center">RAISING HAND</h4>
           <RaisedHandList />
         </div>
-        <div className={mStyles.chat} style={{ 
+        <div className={mStyles.chat} style={{
             flexBasis: "50%",
-            paddingLeft: 32, 
-            paddingRight: 32, 
-            paddingTop: 32 
+            paddingLeft: 32,
+            paddingRight: 32,
+            paddingTop: 32
           }}
         >
           <h4 className="Vlt-center">MESSAGES</h4>
@@ -104,11 +124,11 @@ function ModeratorPage(){
           <h4 className="Vlt-center">LIVE PARTICIPANTS</h4>
           <LiveParticipantList subscribers={mSubscriber.subscribers}>
             {mPublisher.publisher? (
-              <LiveParticipantItem 
-                user={me} 
-                publisher={mPublisher.publisher} 
+              <LiveParticipantItem
+                user={me}
+                publisher={mPublisher.publisher}
                 additionalControls={(
-                  <ShareScreenButton 
+                  <ShareScreenButton
                     size={32}
                     fontSize={16}
                     style={{ marginRight: 8 }}

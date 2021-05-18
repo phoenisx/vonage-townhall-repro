@@ -19,6 +19,7 @@ function SessionProvider({ children }:Props){
   const [ connections, setConnections ] = React.useState<Array<Connection>>([]);
 
   function handleStreamPropertyChanged({ stream, changedProperty, newValue, oldValue }){
+    console.log(">>>>>>>>> Stream Property Change: ", stream, newValue);
     setChangedStream({ stream, changedProperty, newValue, oldValue, token: uuid() });
   }
 
@@ -49,13 +50,13 @@ function SessionProvider({ children }:Props){
   async function connect(credential:Credential){
     try{
       const session = OT.initSession(credential.apiKey, credential.sessionId);
-      
+
       session.on("streamPropertyChanged", handleStreamPropertyChanged);
       session.on("streamCreated", handleStreamCreated);
       session.on("streamDestroyed", handleStreamDestroyed);
       session.on("connectionCreated", handleConnectionCreated);
       session.on("connectionDestroyed", handleConnectionDestroyed);
-      
+
       await new Promise((resolve, reject) => {
         session.connect(credential.token, (err) => {
           if(err) reject(err);
